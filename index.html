@@ -1,21 +1,77 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EuroVote — голосование</title><link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EuroVote — голосование</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<header class="top"><div class="brand">🎤 <span>EuroVote</span></div><nav><button class="tab active" data-view="vote">Голосование</button><button class="tab" data-view="results">Результаты</button><button class="tab" data-view="admin">Админка</button></nav></header>
-<main>
-<section class="hero"><p class="eyebrow">YOUR JURY • YOUR POINTS</p><h1>Раздай свои <em>баллы</em></h1><p>Выбери 10 стран и распределяй баллы от 1 до 12.</p><div class="status" id="status">Голосование открыто</div></section>
-<section id="voteView" class="view">
-<div class="section-head"><div><h2>Твоя таблица</h2><p>Нажми на страну и выбери баллы. Каждое значение можно использовать один раз.</p></div><div class="counter" id="counter">0 / 10 стран</div></div>
-<div class="points" id="points"></div><div class="country-grid" id="countries"></div>
-<div class="bottom-bar"><span id="voteHint">Выбери 10 стран, чтобы отправить голос.</span><button class="primary" id="submitVote" disabled>Отправить голос →</button></div>
-</section>
-<section id="resultsView" class="view hidden"><div class="section-head"><div><h2>Текущий рейтинг</h2><p>Общая сумма баллов всех принятых голосов.</p></div><button class="secondary" id="refreshResults">Обновить</button></div><div id="leaderboard"></div></section>
-<section id="adminView" class="view hidden"><div class="section-head"><div><h2>Управление странами</h2><p>Добавляй участниц, песни и исполнителей.</p></div><button class="secondary" id="toggleVoting">Закрыть голосование</button></div>
-<form id="countryForm" class="admin-form"><label>Страна<input id="countryName" required placeholder="Например, Sweden"></label><label>Флаг (emoji или URL)<input id="flag" required placeholder="🇸🇪 или https://..."></label><label>Песня<input id="song" required placeholder="Название песни"></label><label>Исполнитель<input id="artist" required placeholder="Имя исполнителя"></label><button class="primary" type="submit">＋ Добавить страну</button></form>
-<div id="adminCountries" class="admin-list"></div><div class="admin-tools"><button class="secondary" id="exportData">Экспорт данных</button><label class="secondary upload">Импорт JSON<input id="importData" type="file" accept="application/json"></label><button class="danger" id="resetData">Сбросить демо</button></div>
-<p class="notice">Демо-админка без пароля. Не публикуй её в таком виде: подключи серверную авторизацию перед запуском для реальных пользователей.</p></section>
-</main><footer>EuroVote • Demo edition <span>Сделано для дружеского голосования</span></footer><div id="toast" role="status"></div><script src="app.js"></script></body></html>
+  <header class="hero">
+    <div class="brand">EURO<span>VOTE</span></div>
+    <h1>Голосуй за любимые песни!</h1>
+    <p>Твои баллы решают результат</p>
+  </header>
+
+  <main class="container">
+    <section class="panel setup">
+      <h2>Подключение сайта</h2>
+      <p class="muted">Вставь адрес проекта Supabase и публичный ключ. Обычно это нужно сделать один раз на этом устройстве.</p>
+      <label>Supabase Project URL
+        <input id="supabaseUrl" type="url" placeholder="https://xxxxx.supabase.co">
+      </label>
+      <label>Publishable key
+        <textarea id="supabaseKey" rows="2" placeholder="sb_publishable_..."></textarea>
+      </label>
+      <button id="connectBtn">Подключить</button>
+      <p id="connectionStatus" class="status" aria-live="polite">Не подключено</p>
+    </section>
+
+    <section class="panel">
+      <h2>Голосование</h2>
+      <label>Твой индивидуальный код
+        <input id="voterCode" autocomplete="off" placeholder="Введи код участника">
+      </label>
+      <p class="muted">Распредели все баллы между десятью разными странами.</p>
+      <div id="voteList" class="vote-list"><p class="muted">Сначала подключи сайт.</p></div>
+      <button id="submitVoteBtn" disabled>Отправить голос</button>
+      <p id="voteStatus" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Результаты</h2>
+      <button id="refreshResultsBtn" class="secondary">Обновить результаты</button>
+      <div id="resultsList"><p class="muted">Подключи сайт, чтобы увидеть результаты.</p></div>
+    </section>
+
+    <section class="panel admin">
+      <h2>Панель администратора</h2>
+      <label>Email администратора
+        <input id="adminEmail" type="email" autocomplete="username" placeholder="email@example.com">
+      </label>
+      <label>Пароль
+        <input id="adminPassword" type="password" autocomplete="current-password" placeholder="Пароль">
+      </label>
+      <div class="button-row">
+        <button id="adminLoginBtn">Войти</button>
+        <button id="adminLogoutBtn" class="secondary">Выйти</button>
+      </div>
+      <p id="adminStatus" class="status" aria-live="polite"></p>
+      <div id="adminTools" hidden>
+        <h3>Добавить страну</h3>
+        <label>Страна<input id="countryName" placeholder="Например, Sweden"></label>
+        <label>Исполнитель<input id="countryArtist" placeholder="Имя исполнителя"></label>
+        <label>Название песни<input id="countrySong" placeholder="Название песни"></label>
+        <button id="addCountryBtn">Добавить участника</button>
+        <h3>Создать коды для голосования</h3>
+        <label>Количество кодов (1–500)<input id="codeCount" type="number" min="1" max="500" value="20"></label>
+        <button id="createCodesBtn">Создать коды</button>
+        <textarea id="codesOutput" rows="7" readonly placeholder="Новые коды появятся здесь"></textarea>
+      </div>
+    </section>
+  </main>
+  <footer>EuroVote · Фанатский проект</footer>
+  <script src="app.js"></script>
+</body>
+</html>

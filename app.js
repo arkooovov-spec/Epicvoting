@@ -1,44 +1,146 @@
-const POINTS=[12,10,8,7,6,5,4,3,2,1];
-const initialCountries=[
-{id:"se",name:"Sweden",flag:"🇸🇪",song:"Demo song",artist:"Demo artist"},
-{id:"it",name:"Italy",flag:"🇮🇹",song:"Demo song",artist:"Demo artist"},
-{id:"ua",name:"Ukraine",flag:"🇺🇦",song:"Demo song",artist:"Demo artist"},
-{id:"fr",name:"France",flag:"🇫🇷",song:"Demo song",artist:"Demo artist"},
-{id:"no",name:"Norway",flag:"🇳🇴",song:"Demo song",artist:"Demo artist"},
-{id:"fi",name:"Finland",flag:"🇫🇮",song:"Demo song",artist:"Demo artist"},
-{id:"es",name:"Spain",flag:"🇪🇸",song:"Demo song",artist:"Demo artist"},
-{id:"de",name:"Germany",flag:"🇩🇪",song:"Demo song",artist:"Demo artist"},
-{id:"gb",name:"United Kingdom",flag:"🇬🇧",song:"Demo song",artist:"Demo artist"},
-{id:"gr",name:"Greece",flag:"🇬🇷",song:"Demo song",artist:"Demo artist"},
-{id:"pt",name:"Portugal",flag:"🇵🇹",song:"Demo song",artist:"Demo artist"},
-{id:"ch",name:"Switzerland",flag:"🇨🇭",song:"Demo song",artist:"Demo artist"}
-];
-const KEY="eurovote_demo_v1";
-let data=load(), assigned={}, selectedPoint=null;
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&Array.isArray(x.countries))return x}catch{}return {countries:initialCountries,votes:[],open:true};}
-function save(){localStorage.setItem(KEY,JSON.stringify(data));}
-function safe(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function flagMarkup(f){if(/^https?:\/\//i.test(f))return `<img src="${safe(f)}" alt="flag" onerror="this.parentElement.textContent='🏳️'">`;return safe(f);}
-function toast(msg){let t=document.querySelector("#toast");t.textContent=msg;t.style.display="block";setTimeout(()=>t.style.display="none",2600);}
-function voteKey(){return "eurovote_voted_"+location.pathname;}
-function hasVoted(){return localStorage.getItem(voteKey())==="yes";}
-function totals(){let sums={};data.countries.forEach(c=>sums[c.id]=0);data.votes.forEach(v=>v.points.forEach(p=>{if(sums[p.countryId]!==undefined)sums[p.countryId]+=p.points;}));return sums;}
-function renderPoints(){document.querySelector("#points").innerHTML=POINTS.map(p=>`<button class="point ${assignedPoint(p)?"used":""}" data-point="${p}">${p} баллов</button>`).join("");}
-function assignedPoint(p){return Object.values(assigned).includes(p);}
-function renderCountries(){const el=document.querySelector("#countries");el.innerHTML=data.countries.map(c=>{let p=assigned[c.id];return `<article class="country"><div class="flag">${flagMarkup(c.flag)}</div><div class="details"><strong>${safe(c.name)}</strong><small>${safe(c.song)} • ${safe(c.artist)}</small></div><button class="award ${p?"assigned":""}" data-country="${safe(c.id)}">${p?p+" баллов":"＋ Баллы"}</button></article>`}).join("");}
-function renderVote(){renderPoints();renderCountries();let n=Object.keys(assigned).length;document.querySelector("#counter").textContent=`${n} / 10 стран`;document.querySelector("#submitVote").disabled=n!==10||hasVoted()||!data.open;document.querySelector("#voteHint").textContent=hasVoted()?"Ты уже проголосовал в этом браузере.":!data.open?"Голосование закрыто.":"Выбери 10 стран, чтобы отправить голос.";document.querySelector("#status").textContent=data.open?"Голосование открыто":"Голосование закрыто";}
-function renderResults(){let sums=totals();let sorted=[...data.countries].sort((a,b)=>sums[b.id]-sums[a.id]);document.querySelector("#leaderboard").innerHTML=sorted.map((c,i)=>`<div class="leader-row"><div class="rank">${String(i+1).padStart(2,"0")}</div><div class="leader-country"><div class="flag">${flagMarkup(c.flag)}</div><div><strong>${safe(c.name)}</strong><small>${safe(c.song)} • ${safe(c.artist)}</small></div></div><div class="score">${sums[c.id]||0}<small>баллов</small></div></div>`).join("");}
-function renderAdmin(){document.querySelector("#adminCountries").innerHTML=data.countries.map(c=>`<div class="admin-item"><div class="flag">${flagMarkup(c.flag)}</div><div class="details"><strong>${safe(c.name)}</strong><small>${safe(c.song)} • ${safe(c.artist)}</small></div><button class="danger" data-delete="${safe(c.id)}">Удалить</button></div>`).join("");document.querySelector("#toggleVoting").textContent=data.open?"Закрыть голосование":"Открыть голосование";}
-function render(){renderVote();renderResults();renderAdmin();}
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".view").forEach(x=>x.classList.add("hidden"));document.querySelector("#"+b.dataset.view+"View").classList.remove("hidden");if(b.dataset.view==="results")renderResults();if(b.dataset.view==="admin")renderAdmin();}));
-document.querySelector("#points").addEventListener("click",e=>{let b=e.target.closest("[data-point]");if(!b)return;selectedPoint=Number(b.dataset.point);document.querySelectorAll(".point").forEach(x=>x.classList.toggle("used",assignedPoint(Number(x.dataset.point))));toast(`Выбрано ${selectedPoint} баллов. Теперь нажми на страну.`);});
-document.querySelector("#countries").addEventListener("click",e=>{let b=e.target.closest("[data-country]");if(!b)return;if(hasVoted()||!data.open)return;let id=b.dataset.country;if(!selectedPoint){toast("Сначала выбери количество баллов сверху.");return;}if(assignedPoint(selectedPoint)&&assigned[id]!==selectedPoint){toast("Эти баллы уже использованы.");return;}if(assigned[id])delete assigned[id];if(Object.keys(assigned).length>=10&&!assigned[id]){toast("Можно выбрать только 10 стран.");return;}assigned[id]=selectedPoint;selectedPoint=null;renderVote();});
-document.querySelector("#submitVote").addEventListener("click",()=>{if(Object.keys(assigned).length!==10||hasVoted()||!data.open)return;data.votes.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),points:Object.entries(assigned).map(([countryId,points])=>({countryId,points})),createdAt:new Date().toISOString()});localStorage.setItem(voteKey(),"yes");save();assigned={};render();toast("Голос принят! Спасибо ❤️");});
-document.querySelector("#countryForm").addEventListener("submit",e=>{e.preventDefault();let c={id:"c"+Date.now(),name:document.querySelector("#countryName").value.trim(),flag:document.querySelector("#flag").value.trim(),song:document.querySelector("#song").value.trim(),artist:document.querySelector("#artist").value.trim()};if(data.countries.some(x=>x.name.toLowerCase()===c.name.toLowerCase())){toast("Такая страна уже добавлена.");return;}data.countries.push(c);save();e.target.reset();render();toast("Страна добавлена.");});
-document.querySelector("#adminCountries").addEventListener("click",e=>{let b=e.target.closest("[data-delete]");if(!b)return;data.countries=data.countries.filter(c=>c.id!==b.dataset.delete);data.votes.forEach(v=>v.points=v.points.filter(p=>p.countryId!==b.dataset.delete));save();render();});
-document.querySelector("#toggleVoting").addEventListener("click",()=>{data.open=!data.open;save();render();toast(data.open?"Голосование открыто":"Голосование закрыто");});
-document.querySelector("#refreshResults").addEventListener("click",renderResults);
-document.querySelector("#exportData").addEventListener("click",()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="eurovote-data.json";a.click();URL.revokeObjectURL(a.href);});
-document.querySelector("#importData").addEventListener("change",async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!Array.isArray(x.countries)||!Array.isArray(x.votes))throw Error();data=x;save();render();toast("Данные импортированы.");}catch{toast("Не удалось импортировать JSON.");}e.target.value="";});
-document.querySelector("#resetData").addEventListener("click",()=>{if(!confirm("Удалить все демо-данные и вернуть начальные страны?"))return;data={countries:initialCountries,votes:[],open:true};localStorage.removeItem(voteKey());assigned={};save();render();toast("Демо сброшено.");});
-render();
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const POINTS = [12,10,8,7,6,5,4,3,2,1];
+  let sb = null;
+  let countries = [];
+  let channel = null;
+
+  function status(id, message, error=false) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = message;
+    el.style.color = error ? '#ff8da9' : '';
+  }
+  function savedConfig() {
+    $('supabaseUrl').value = localStorage.getItem('ev_url') || '';
+    $('supabaseKey').value = localStorage.getItem('ev_key') || '';
+  }
+  function connect() {
+    const url = $('supabaseUrl').value.trim().replace(/\/+$/, '');
+    const key = $('supabaseKey').value.trim();
+    if (!url || !key) return status('connectionStatus','Введи URL и публичный ключ.',true);
+    if (!window.supabase?.createClient) return status('connectionStatus','Не удалось загрузить библиотеку Supabase. Проверь интернет.',true);
+    localStorage.setItem('ev_url',url);
+    localStorage.setItem('ev_key',key);
+    sb = window.supabase.createClient(url,key);
+    status('connectionStatus','Подключение…');
+    loadCountries();
+    loadResults();
+    setupRealtime();
+  }
+  async function loadCountries() {
+    if (!sb) return;
+    const {data,error} = await sb.from('countries').select('*').order('name');
+    if (error) return status('connectionStatus','Ошибка загрузки стран: '+error.message,true);
+    countries = data || [];
+    renderVoteList();
+    status('connectionStatus','Сайт подключён. Участников: '+countries.length);
+  }
+  function renderVoteList() {
+    const root = $('voteList');
+    if (!countries.length) {
+      root.innerHTML = '<p class="muted">Пока нет добавленных стран.</p>';
+      $('submitVoteBtn').disabled = true;
+      return;
+    }
+    root.innerHTML = countries.map(c => `
+      <div class="vote-row">
+        <div><strong>${escapeHtml(c.name)}</strong><small>${escapeHtml([c.artist,c.song].filter(Boolean).join(' — '))}</small></div>
+        <select aria-label="Баллы для ${escapeHtml(c.name)}" data-country="${escapeHtml(c.id)}">
+          <option value="">0 баллов</option>
+          ${POINTS.map(p=>`<option value="${p}">${p} баллов</option>`).join('')}
+        </select>
+      </div>`).join('');
+    root.querySelectorAll('select').forEach(s=>s.addEventListener('change',validateVote));
+    validateVote();
+  }
+  function validateVote() {
+    const vals = [...$('voteList').querySelectorAll('select')].map(s=>s.value).filter(Boolean);
+    const valid = vals.length === 10 && new Set(vals).size === 10;
+    $('submitVoteBtn').disabled = !valid;
+    if (vals.length) status('voteStatus', valid ? 'Все 10 оценок распределены.' : `Выбрано оценок: ${vals.length} из 10. Каждое значение можно использовать один раз.`);
+  }
+  async function submitVote() {
+    if (!sb) return status('voteStatus','Сначала подключи сайт.',true);
+    const code = $('voterCode').value.trim();
+    if (!code) return status('voteStatus','Введи индивидуальный код.',true);
+    const selects = [...$('voteList').querySelectorAll('select')];
+    const allocations = selects.filter(s=>s.value).map(s=>({country_id:s.dataset.country,points:Number(s.value)}));
+    if (allocations.length!==10 || new Set(allocations.map(a=>a.points)).size!==10) return status('voteStatus','Распредели все баллы от 12 до 1 без повторов.',true);
+    $('submitVoteBtn').disabled = true;
+    status('voteStatus','Отправляем голос…');
+    const {data,error} = await sb.functions.invoke('cast-vote',{body:{code,allocations}});
+    if (error) {
+      let msg = error.message || 'Не удалось отправить голос.';
+      try { const body=await error.context.json(); if(body.error) msg=body.error; } catch(_){}
+      status('voteStatus',msg,true);
+      validateVote();
+      return;
+    }
+    status('voteStatus',data?.message || 'Голос принят! Спасибо за участие.');
+    $('voterCode').value='';
+    selects.forEach(s=>s.value='');
+    validateVote();
+    loadResults();
+  }
+  async function loadResults() {
+    if (!sb) return;
+    const root=$('resultsList');
+    const {data,error}=await sb.from('results').select('*').order('total_points',{ascending:false});
+    if(error){root.innerHTML='<p class="muted">Не удалось загрузить результаты: '+escapeHtml(error.message)+'</p>';return;}
+    if(!data?.length){root.innerHTML='<p class="muted">Пока голосов нет.</p>';return;}
+    root.innerHTML=data.map((r,i)=>`<div class="result-row"><div><strong>${i+1}. ${escapeHtml(r.name || 'Участник')}</strong>${r.artist?`<div class="muted">${escapeHtml(r.artist)}</div>`:''}</div><div class="result-points">${Number(r.total_points)||0} очков</div></div>`).join('');
+  }
+  function setupRealtime() {
+    if (!sb) return;
+    if (channel) sb.removeChannel(channel);
+    channel=sb.channel('public-vote-updates').on('postgres_changes',{event:'INSERT',schema:'public',table:'vote_items'},()=>loadResults()).subscribe();
+  }
+  async function adminLogin() {
+    if (!sb) return status('adminStatus','Сначала подключи сайт.',true);
+    const {data,error}=await sb.auth.signInWithPassword({email:$('adminEmail').value.trim(),password:$('adminPassword').value});
+    if(error) return status('adminStatus',error.message,true);
+    $('adminTools').hidden=false;
+    status('adminStatus','Вход выполнен.');
+  }
+  async function adminLogout() {
+    if(sb) await sb.auth.signOut();
+    $('adminTools').hidden=true;
+    status('adminStatus','Вы вышли из панели.');
+  }
+  async function addCountry() {
+    const name=$('countryName').value.trim(), artist=$('countryArtist').value.trim(), song=$('countrySong').value.trim();
+    if(!name) return status('adminStatus','Укажи название страны.',true);
+    const {error}=await sb.from('countries').insert({name,artist,song});
+    if(error) return status('adminStatus','Не удалось добавить: '+error.message,true);
+    $('countryName').value='';$('countryArtist').value='';$('countrySong').value='';
+    status('adminStatus','Участник добавлен.');
+    loadCountries();
+  }
+  async function createCodes() {
+    const count=Number($('codeCount').value);
+    if(!Number.isInteger(count)||count<1||count>500) return status('adminStatus','Укажи число от 1 до 500.',true);
+    const {data,error}=await sb.functions.invoke('admin-create-codes',{body:{count}});
+    if(error) {
+      let msg=error.message||'Не удалось создать коды.';
+      try{const b=await error.context.json();if(b.error)msg=b.error;}catch(_){}
+      return status('adminStatus',msg,true);
+    }
+    const codes=data?.codes || data?.voter_codes || [];
+    $('codesOutput').value=codes.map(c=>typeof c==='string'?c:(c.code||JSON.stringify(c))).join('\n');
+    status('adminStatus',`Создано кодов: ${codes.length || count}. Скопируй и сохрани их.`);
+  }
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  $('connectBtn').addEventListener('click',connect);
+  $('submitVoteBtn').addEventListener('click',submitVote);
+  $('refreshResultsBtn').addEventListener('click',loadResults);
+  $('adminLoginBtn').addEventListener('click',adminLogin);
+  $('adminLogoutBtn').addEventListener('click',adminLogout);
+  $('addCountryBtn').addEventListener('click',addCountry);
+  $('createCodesBtn').addEventListener('click',createCodes);
+  savedConfig();
+  if(localStorage.getItem('ev_url') && localStorage.getItem('ev_key')) connect();
+})();
