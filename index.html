@@ -3,98 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#17142c">
-  <title>EuroVote — твой голос решает</title>
+  <meta name="theme-color" content="#f7f6f3">
+  <title>EuroVote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <header class="hero">
-    <div class="hero-glow hero-glow-one"></div>
-    <div class="hero-glow hero-glow-two"></div>
-    <div class="hero-inner">
-      <div class="brand" aria-label="EuroVote"><span class="brand-mark">♥</span> eurovote</div>
-      <div class="eyebrow">YOUR MUSIC. YOUR VOTE.</div>
-      <h1>Пусть музыка<br><span>говорит.</span></h1>
-      <p class="hero-copy">Выбирай любимые выступления и решай, кто получит твои douze points.</p>
-      <a class="scroll-link" href="#voting">К голосованию <span>↓</span></a>
-    </div>
-    <div class="hero-orbit orbit-one"></div>
-    <div class="hero-orbit orbit-two"></div>
+  <header class="topbar">
+    <a class="wordmark" href="#"><span class="wordmark-icon">e</span> eurovote</a>
+    <span class="topbar-caption">MUSIC • VOTING • COMMUNITY</span>
   </header>
 
-  <main class="container">
-    <details class="connection-settings" id="connectionSettings" open>
-      <summary><span class="summary-dot"></span> Настройки подключения <span class="summary-chevron">⌄</span></summary>
-      <div class="settings-content">
-        <p class="settings-note">Эти данные нужны только для связи сайта с базой голосования.</p>
-        <label>Адрес проекта
-          <input id="supabaseUrl" type="url" placeholder="https://xxxxx.supabase.co" autocomplete="url">
-        </label>
-        <label>Публичный ключ
-          <textarea id="supabaseKey" rows="2" placeholder="sb_publishable_..."></textarea>
-        </label>
-        <button id="connectBtn" class="button button-primary">Подключить</button>
+  <main class="page">
+    <section class="intro">
+      <p class="kicker">THE SONGS. THE MOMENT. YOUR VOTE.</p>
+      <h1>Музыка объединяет<span>.</span></h1>
+      <p class="intro-copy">Выбери выступления, которые запомнились тебе больше всего.</p>
+      <a class="jump-link" href="#voting">Перейти к голосованию <span>↓</span></a>
+    </section>
+
+    <details class="connection" id="connectionSettings">
+      <summary><span class="connection-indicator"></span> Подключение <span class="summary-arrow">⌄</span></summary>
+      <div class="connection-body">
+        <p>Технические настройки сайта.</p>
+        <label>Supabase Project URL<input id="supabaseUrl" type="url" placeholder="https://xxxxx.supabase.co"></label>
+        <label>Publishable key<textarea id="supabaseKey" rows="2" placeholder="sb_publishable_..."></textarea></label>
+        <button id="connectBtn" class="button button-dark">Подключить</button>
         <p id="connectionStatus" class="status" aria-live="polite">Не подключено</p>
       </div>
     </details>
 
-    <section class="section-block" id="voting">
-      <div class="section-heading">
+    <section class="content-section" id="voting">
+      <div class="section-top">
         <div>
-          <div class="eyebrow eyebrow-dark">THE BIG VOTE</div>
-          <h2>Твоё голосование</h2>
-          <p class="section-subtitle">Раздай 10 оценок своим фаворитам.</p>
+          <p class="kicker">CAST YOUR VOTE</p>
+          <h2>Голосование</h2>
+          <p class="section-copy">10 оценок. 10 любимых выступлений.</p>
         </div>
-        <div class="points-stamp"><strong>12</strong><span>POINTS</span></div>
+        <div class="twelve-mark"><strong>12</strong><span>POINTS</span></div>
       </div>
-      <div id="voteIdentity" class="notice">Подключаем голосование…</div>
-      <div id="voteList" class="vote-list"><p class="empty-state">Здесь появятся участники конкурса.</p></div>
-      <div class="vote-action">
-        <button id="submitVoteBtn" class="button button-primary button-wide" disabled>Отправить мой голос <span>→</span></button>
+      <div id="voteIdentity" class="vote-notice">Подключаем голосование…</div>
+      <div id="voteList" class="vote-list"><p class="empty-state">Список участников появится здесь.</p></div>
+      <div class="vote-submit">
+        <button id="submitVoteBtn" class="button button-accent" disabled>Отправить голос <span>→</span></button>
         <p id="voteStatus" class="status" aria-live="polite"></p>
       </div>
     </section>
 
-    <section class="section-block results-section">
-      <div class="section-heading results-heading">
+    <section class="content-section results-section">
+      <div class="section-top results-top">
         <div>
-          <div class="eyebrow eyebrow-dark">LIVE RESULTS</div>
-          <h2>Таблица лидеров</h2>
-          <p class="section-subtitle">Каждый балл приближает к победе.</p>
+          <p class="kicker">THE LEADERBOARD</p>
+          <h2>Результаты</h2>
+          <p class="section-copy">Текущая таблица лидеров.</p>
         </div>
-        <button id="refreshResultsBtn" class="refresh-button" aria-label="Обновить результаты" title="Обновить результаты">↻</button>
+        <button id="refreshResultsBtn" class="refresh-button" title="Обновить результаты" aria-label="Обновить результаты">↻</button>
       </div>
-      <div id="resultsList" class="results-list"><p class="empty-state">Результаты появятся здесь.</p></div>
+      <div id="resultsList" class="results-list"><p class="empty-state">Результаты появятся после голосования.</p></div>
     </section>
 
-    <section class="admin-gate" id="adminSection" hidden>
-      <div class="eyebrow eyebrow-dark">PRIVATE AREA</div>
-      <h2>Администрирование</h2>
-      <p class="section-subtitle">Вход доступен только аккаунту владельца.</p>
-      <div class="admin-login">
-        <label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Твой email"></label>
+    <section class="admin-area" id="adminSection" hidden>
+      <div class="admin-heading">
+        <p class="kicker">PRIVATE ACCESS</p>
+        <h2>Администратор</h2>
+        <p class="section-copy">Вход только для владельца сайта.</p>
+      </div>
+      <div class="admin-card">
+        <label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Email администратора"></label>
         <label>Пароль<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Пароль"></label>
-        <div class="button-row">
-          <button id="adminLoginBtn" class="button button-primary">Войти</button>
-          <button id="adminLogoutBtn" class="button button-light" hidden>Выйти</button>
+        <div class="admin-buttons">
+          <button id="adminLoginBtn" class="button button-dark">Войти</button>
+          <button id="adminLogoutBtn" class="button button-quiet">Выйти</button>
         </div>
         <p id="adminStatus" class="status" aria-live="polite"></p>
-      </div>
-      <div id="adminTools" class="admin-tools" hidden>
-        <div class="admin-divider"></div>
-        <h3>Добавить участника</h3>
-        <label>Страна<input id="countryName" placeholder="Например, Sweden"></label>
-        <label>Исполнитель<input id="countryArtist" placeholder="Имя исполнителя"></label>
-        <label>Песня<input id="countrySong" placeholder="Название песни"></label>
-        <button id="addCountryBtn" class="button button-primary">Добавить участника</button>
+        <div id="adminTools" hidden class="admin-tools">
+          <div class="admin-rule"></div>
+          <h3>Добавить участника</h3>
+          <label>Страна<input id="countryName" placeholder="Sweden"></label>
+          <label>Исполнитель<input id="countryArtist" placeholder="Имя исполнителя"></label>
+          <label>Песня<input id="countrySong" placeholder="Название песни"></label>
+          <button id="addCountryBtn" class="button button-accent">Добавить участника</button>
+        </div>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <div class="footer-brand">eurovote <span>♥</span></div>
-    <p>Музыка объединяет.</p>
+    <span class="footer-mark">eurovote</span>
+    <span>Made for music lovers.</span>
   </footer>
   <script src="app.js"></script>
 </body>
