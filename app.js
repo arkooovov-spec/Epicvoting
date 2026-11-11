@@ -85,7 +85,7 @@
     const {data,error}=await sb.from('results').select('*').order('total_points',{ascending:false});
     if(error){root.innerHTML='<p class="muted">Не удалось загрузить результаты: '+esc(error.message)+'</p>';return;}
     if(!data?.length){root.innerHTML='<p class="muted">Пока голосов нет.</p>';return;}
-    root.innerHTML=data.map((r,i)=>`<div class="result-row"><div><strong>${i+1}. ${esc(r.name||'Участник')}</strong>${r.artist?`<div class="muted">${esc(r.artist)}</div>`:''}</div><div class="result-points">${Number(r.total_points)||0} очков</div></div>`).join('');
+    root.innerHTML=data.map((r,i)=>`<div class="result-row"><div class="result-rank">${String(i+1).padStart(2,'0')}</div><div class="result-info"><strong>${esc(r.name||r.country_name||r.country||r.countryName||'Участник')}</strong>${r.artist?`<div class="muted">${esc(r.artist)}</div>`:''}</div><div class="result-points">${Number(r.total_points)||0}<small> очков</small></div></div>`).join('');
   }
   function setupRealtime(){
     if(channel)sb.removeChannel(channel);
