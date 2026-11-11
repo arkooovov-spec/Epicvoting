@@ -1,6 +1,8 @@
 (() => {
   const $ = id => document.getElementById(id);
   const POINTS = [12,10,8,7,6,5,4,3,2,1];
+  const DEFAULT_SUPABASE_URL = 'https://rbsqumtcbxlppeqzxakd.supabase.co';
+  const DEFAULT_SUPABASE_KEY = 'sb_publishable_jFL37i1rb6Exx9VPA707qw_Cj-627r8';
   let sb = null, countries = [], channel = null, anonymousUserId = null, alreadyVoted = false;
 
   function say(id, message, error=false) {
@@ -8,7 +10,10 @@
     el.textContent=message; el.style.color=error?'#ff8da9':'';
   }
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  function restore(){ $('supabaseUrl').value=localStorage.getItem('ev_url')||''; $('supabaseKey').value=localStorage.getItem('ev_key')||''; }
+  function restore(){
+    $('supabaseUrl').value=localStorage.getItem('ev_url')||DEFAULT_SUPABASE_URL;
+    $('supabaseKey').value=localStorage.getItem('ev_key')||DEFAULT_SUPABASE_KEY;
+  }
   async function connect(){
     const url=$('supabaseUrl').value.trim().replace(/\/+$/,'');
     const key=$('supabaseKey').value.trim();
@@ -147,5 +152,5 @@
   window.addEventListener('hashchange', updateAdminVisibility);
   updateAdminVisibility();
   restore();
-  if(localStorage.getItem('ev_url')&&localStorage.getItem('ev_key'))connect();
+  connect();
 })();
