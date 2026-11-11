@@ -38,11 +38,15 @@
     if(error){say('connectionStatus','Ошибка загрузки стран: '+error.message,true);return;}
     countries=data||[]; renderCountries();
   }
+  function flagFor(name){
+    const flags={Albania:'🇦🇱',Armenia:'🇦🇲',Austria:'🇦🇹',Azerbaijan:'🇦🇿',Belgium:'🇧🇪',Croatia:'🇭🇷',Cyprus:'🇨🇾',Czechia:'🇨🇿',Denmark:'🇩🇰',Estonia:'🇪🇪',Finland:'🇫🇮',France:'🇫🇷',Georgia:'🇬🇪',Germany:'🇩🇪',Greece:'🇬🇷',Iceland:'🇮🇸',Ireland:'🇮🇪',Israel:'🇮🇱',Italy:'🇮🇹',Latvia:'🇱🇻',Lithuania:'🇱🇹',Luxembourg:'🇱🇺',Malta:'🇲🇹',Moldova:'🇲🇩',Montenegro:'🇲🇪',Netherlands:'🇳🇱',Norway:'🇳🇴',Poland:'🇵🇱',Portugal:'🇵🇹',Romania:'🇷🇴',SanMarino:'🇸🇲',Serbia:'🇷🇸',Slovenia:'🇸🇮',Spain:'🇪🇸',Sweden:'🇸🇪',Switzerland:'🇨🇭',Ukraine:'🇺🇦',UnitedKingdom:'🇬🇧'};
+    return (flags[String(name||'').replace(/\\s+/g,'')]||'🌍');
+  }
   function renderCountries(){
     const root=$('voteList');
     if(alreadyVoted){root.innerHTML='<div class="notice">Твой голос уже принят. Повторно проголосовать с этой учётной записи нельзя. Спасибо!</div>';$('submitVoteBtn').disabled=true;return;}
     if(!countries.length){root.innerHTML='<p class="muted">Пока нет добавленных стран.</p>';$('submitVoteBtn').disabled=true;return;}
-    root.innerHTML=countries.map(c=>`<div class="vote-row"><div><strong>${esc(c.name)}</strong><small>${esc([c.artist,c.song].filter(Boolean).join(' — '))}</small></div><select aria-label="Баллы для ${esc(c.name)}" data-country="${esc(c.id)}"><option value="">0 баллов</option>${POINTS.map(p=>`<option value="${p}">${p} баллов</option>`).join('')}</select></div>`).join('');
+    root.innerHTML=countries.map(c=>`<div class="vote-row"><div><strong>${flagFor(c.name)} ${esc(c.name)}</strong><small>${esc([c.artist,c.song].filter(Boolean).join(' — '))}</small></div><select aria-label="Баллы для ${esc(c.name)}" data-country="${esc(c.id)}"><option value="">0</option>${POINTS.map(p=>`<option value="${p}">${p}</option>`).join('')}</select></div>`).join('');
     root.querySelectorAll('select').forEach(s=>s.addEventListener('change',validate));
     validate();
   }
