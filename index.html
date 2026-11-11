@@ -3,55 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EuroVote — голосование</title>
+  <meta name="theme-color" content="#17142c">
+  <title>EuroVote — твой голос решает</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header class="hero">
-    <div class="brand">EURO<span>VOTE</span></div>
-    <h1>Голосуй за любимые песни!</h1>
-    <p>Твои баллы решают результат</p>
+    <div class="hero-glow hero-glow-one"></div>
+    <div class="hero-glow hero-glow-two"></div>
+    <div class="hero-inner">
+      <div class="brand" aria-label="EuroVote"><span class="brand-mark">♥</span> eurovote</div>
+      <div class="eyebrow">YOUR MUSIC. YOUR VOTE.</div>
+      <h1>Пусть музыка<br><span>говорит.</span></h1>
+      <p class="hero-copy">Выбирай любимые выступления и решай, кто получит твои douze points.</p>
+      <a class="scroll-link" href="#voting">К голосованию <span>↓</span></a>
+    </div>
+    <div class="hero-orbit orbit-one"></div>
+    <div class="hero-orbit orbit-two"></div>
   </header>
+
   <main class="container">
-    <section class="panel setup">
-      <h2>Подключение сайта</h2>
-      <p class="muted">Укажи адрес проекта Supabase и публичный ключ. Они сохранятся на этом устройстве.</p>
-      <label>Supabase Project URL<input id="supabaseUrl" type="url" placeholder="https://xxxxx.supabase.co"></label>
-      <label>Publishable key<textarea id="supabaseKey" rows="2" placeholder="sb_publishable_..."></textarea></label>
-      <button id="connectBtn">Подключить</button>
-      <p id="connectionStatus" class="status" aria-live="polite">Не подключено</p>
+    <details class="connection-settings" id="connectionSettings" open>
+      <summary><span class="summary-dot"></span> Настройки подключения <span class="summary-chevron">⌄</span></summary>
+      <div class="settings-content">
+        <p class="settings-note">Эти данные нужны только для связи сайта с базой голосования.</p>
+        <label>Адрес проекта
+          <input id="supabaseUrl" type="url" placeholder="https://xxxxx.supabase.co" autocomplete="url">
+        </label>
+        <label>Публичный ключ
+          <textarea id="supabaseKey" rows="2" placeholder="sb_publishable_..."></textarea>
+        </label>
+        <button id="connectBtn" class="button button-primary">Подключить</button>
+        <p id="connectionStatus" class="status" aria-live="polite">Не подключено</p>
+      </div>
+    </details>
+
+    <section class="section-block" id="voting">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow eyebrow-dark">THE BIG VOTE</div>
+          <h2>Твоё голосование</h2>
+          <p class="section-subtitle">Раздай 10 оценок своим фаворитам.</p>
+        </div>
+        <div class="points-stamp"><strong>12</strong><span>POINTS</span></div>
+      </div>
+      <div id="voteIdentity" class="notice">Подключаем голосование…</div>
+      <div id="voteList" class="vote-list"><p class="empty-state">Здесь появятся участники конкурса.</p></div>
+      <div class="vote-action">
+        <button id="submitVoteBtn" class="button button-primary button-wide" disabled>Отправить мой голос <span>→</span></button>
+        <p id="voteStatus" class="status" aria-live="polite"></p>
+      </div>
     </section>
-    <section class="panel">
-      <h2>Голосование</h2>
-      <div id="voteIdentity" class="notice">Подключи сайт, чтобы начать.</div>
-      <div id="voteList" class="vote-list"><p class="muted">Сначала подключи сайт.</p></div>
-      <button id="submitVoteBtn" disabled>Подтвердить и отправить голос</button>
-      <p id="voteStatus" class="status" aria-live="polite"></p>
+
+    <section class="section-block results-section">
+      <div class="section-heading results-heading">
+        <div>
+          <div class="eyebrow eyebrow-dark">LIVE RESULTS</div>
+          <h2>Таблица лидеров</h2>
+          <p class="section-subtitle">Каждый балл приближает к победе.</p>
+        </div>
+        <button id="refreshResultsBtn" class="refresh-button" aria-label="Обновить результаты" title="Обновить результаты">↻</button>
+      </div>
+      <div id="resultsList" class="results-list"><p class="empty-state">Результаты появятся здесь.</p></div>
     </section>
-    <section class="panel">
-      <h2>Результаты</h2>
-      <button id="refreshResultsBtn" class="secondary">Обновить результаты</button>
-      <div id="resultsList"><p class="muted">Подключи сайт, чтобы увидеть результаты.</p></div>
-    </section>
-    <section class="panel admin">
-      <h2>Панель администратора</h2>
-      <label>Email администратора<input id="adminEmail" type="email" autocomplete="username" placeholder="email@example.com"></label>
-      <label>Пароль<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Пароль"></label>
-      <div class="button-row"><button id="adminLoginBtn">Войти</button><button id="adminLogoutBtn" class="secondary">Выйти из админки</button></div>
-      <p id="adminStatus" class="status" aria-live="polite"></p>
-      <div id="adminTools" hidden>
-        <h3>Добавить страну</h3>
+
+    <section class="admin-gate" id="adminSection" hidden>
+      <div class="eyebrow eyebrow-dark">PRIVATE AREA</div>
+      <h2>Администрирование</h2>
+      <p class="section-subtitle">Вход доступен только аккаунту владельца.</p>
+      <div class="admin-login">
+        <label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Твой email"></label>
+        <label>Пароль<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Пароль"></label>
+        <div class="button-row">
+          <button id="adminLoginBtn" class="button button-primary">Войти</button>
+          <button id="adminLogoutBtn" class="button button-light" hidden>Выйти</button>
+        </div>
+        <p id="adminStatus" class="status" aria-live="polite"></p>
+      </div>
+      <div id="adminTools" class="admin-tools" hidden>
+        <div class="admin-divider"></div>
+        <h3>Добавить участника</h3>
         <label>Страна<input id="countryName" placeholder="Например, Sweden"></label>
         <label>Исполнитель<input id="countryArtist" placeholder="Имя исполнителя"></label>
-        <label>Название песни<input id="countrySong" placeholder="Название песни"></label>
-        <button id="addCountryBtn">Добавить участника</button>
-        <h3>Старые коды</h3>
-        <p class="muted">Новая система голосует без кодов. Старые коды больше не нужны.</p>
+        <label>Песня<input id="countrySong" placeholder="Название песни"></label>
+        <button id="addCountryBtn" class="button button-primary">Добавить участника</button>
       </div>
     </section>
   </main>
-  <footer>EuroVote · Фанатский проект</footer>
+
+  <footer class="footer">
+    <div class="footer-brand">eurovote <span>♥</span></div>
+    <p>Музыка объединяет.</p>
+  </footer>
   <script src="app.js"></script>
 </body>
 </html>
