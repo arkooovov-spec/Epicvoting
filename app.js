@@ -121,8 +121,17 @@
   $('adminLoginBtn').addEventListener('click',adminLogin);
   $('adminLogoutBtn').addEventListener('click',adminLogout);
   $('addCountryBtn').addEventListener('click',addCountry);
+  function activateTab(name){
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+    document.querySelectorAll('.tab-page').forEach(p=>{p.hidden=p.id!=='page-'+name;});
+  }
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.tab)));
   function updateAdminVisibility(){
-    $('adminSection').hidden = location.hash !== '#admin';
+    const isAdmin = location.hash === '#admin';
+    $('adminSection').hidden = !isAdmin;
+    $('welcome').hidden = isAdmin;
+    document.querySelector('.tabs').hidden = isAdmin;
+    document.querySelectorAll('.tab-page').forEach(p=>p.hidden=isAdmin || p.id!=='page-voting');
   }
   window.addEventListener('hashchange', updateAdminVisibility);
   updateAdminVisibility();

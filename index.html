@@ -1,78 +1,52 @@
 <!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#35145f"><title>EuroVote</title>
+<html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#241039"><title>EuroVote</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
 <body>
-<header class="app-header">
-  <div class="brand"><span class="brand-symbol">e</span><span>EuroVote</span></div>
-  <div class="header-meta">YOUR EUROVISION SCOREBOARD</div>
-  <a class="settings-shortcut" href="#connectionSettings" aria-label="Настройки">⚙</a>
-</header>
-<main class="app-shell">
-  <section class="dashboard-strip">
-    <div class="dashboard-tile contest-tile"><span class="tile-icon">💗</span><div><small>CONTEST</small><strong>Eurovision</strong><b>2025</b></div><span class="tile-action">🏆</span></div>
-    <div class="dashboard-tile theme-tile"><span class="theme-dot"></span><div><small>YOUR THEME</small><strong>Euro purple</strong><b>Classic</b></div><span class="tile-action">✦</span></div>
-  </section>
-  <section class="quick-actions">
-    <div class="profile-pill"><span class="avatar">e</span><strong>EuroVote</strong></div>
-    <a class="quick-button" href="#connectionSettings">⚙ <span>Settings</span></a>
-    <a class="quick-button icon-only" href="#resultsList" aria-label="Результаты">▤</a>
-    <a class="quick-button icon-only" href="#adminSection" aria-label="Администратор">♙</a>
-  </section>
-  <section class="mini-tabs">
-    <a href="#voting"><span>◉</span><b>Voting</b><small>Choose your points</small></a>
-    <a href="#results"><span>🏆</span><b>Results</b><small>Live leaderboard</small></a>
-    <a href="#connectionSettings"><span>✧</span><b>Settings</b><small>On this device</small></a>
-  </section>
-
-  <details class="connection" id="connectionSettings">
-    <summary><span class="connection-led"></span> Подключение к базе <span class="chevron">⌄</span></summary>
-    <div class="connection-body">
-      <p>Технические настройки подключения.</p>
-      <label>Supabase Project URL<input id="supabaseUrl" type="url" placeholder="https://xxxxx.supabase.co"></label>
-      <label>Publishable key<textarea id="supabaseKey" rows="2" placeholder="sb_publishable_..."></textarea></label>
-      <button id="connectBtn" class="button button-light">Подключить</button>
-      <p id="connectionStatus" class="status" aria-live="polite">Не подключено</p>
-    </div>
-  </details>
-
-  <section class="contest-card">
-    <div class="contest-title"><span class="contest-heart">♥</span><div><h1>Eurovision 2025</h1><p><span class="device-icon">▣</span> On this device</p></div></div>
-    <div class="contest-actions"><a href="#voting" class="contest-action">▣ <span>Vote</span></a><a href="#results" class="contest-action">↕ <span>Ranking</span></a><a href="#connectionSettings" class="contest-action">☷ <span>Settings</span></a><button id="refreshResultsBtn" class="contest-action">↻ <span>Refresh</span></button></div>
-  </section>
-
-  <section class="vote-panel" id="voting">
-    <div class="panel-heading"><div class="panel-title"><span class="step-number">01</span><div><p class="eyebrow">YOUR SCOREBOARD</p><h2>Голосование</h2></div></div><div class="points-bubble"><strong>12</strong><small>POINTS</small></div></div>
-    <div class="vote-subtitle">Распредели баллы между любимыми выступлениями.</div>
-    <div id="voteIdentity" class="vote-notice">Подключаем голосование…</div>
+<header class="topbar"><a class="logo" href="#"><span class="logo-mark">e</span><span>EuroVote</span></a><span class="top-caption">EUROVISION COMMUNITY</span></header>
+<main class="shell">
+  <section class="welcome" id="welcome"><div class="welcome-kicker">MUSIC · VOTING · COMMUNITY</div><h1>Твой голос.<br><em>Твоя музыка.</em></h1><p>Выбирай выступления, которые запомнились тебе больше всего.</p></section>
+  <nav class="tabs" aria-label="Разделы сайта">
+    <button class="tab active" data-tab="voting"><span>◉</span> Голосование</button>
+    <button class="tab" data-tab="results"><span>🏆</span> Результаты</button>
+    <button class="tab" data-tab="settings"><span>⚙</span> Настройки</button>
+  </nav>
+  <section class="tab-page active" id="page-voting">
+    <div class="section-head"><div><div class="eyebrow">YOUR VOTE</div><h2>Голосование</h2><p>Распредели 10 оценок между любимыми выступлениями.</p></div><div class="points-mark"><b>12</b><small>POINTS</small></div></div>
+    <div id="voteIdentity" class="notice">Подключаем голосование…</div>
     <div id="voteList" class="vote-list"><p class="empty-state">Список участников появится здесь.</p></div>
-    <div class="vote-footer"><button id="submitVoteBtn" class="button button-start" disabled><span>▷</span> Отправить голос</button><p id="voteStatus" class="status" aria-live="polite"></p></div>
+    <div class="submit-wrap"><button id="submitVoteBtn" class="button button-primary" disabled>Отправить голос <span>→</span></button><p id="voteStatus" class="status" aria-live="polite"></p></div>
   </section>
-
-  <section class="results-panel" id="results">
-    <div class="panel-heading"><div class="panel-title"><span class="step-number results-step">02</span><div><p class="eyebrow">LIVE LEADERBOARD</p><h2>Результаты</h2></div></div><span class="live-tag"><i></i> LIVE</span></div>
+  <section class="tab-page" id="page-results" hidden>
+    <div class="section-head"><div><div class="eyebrow">LIVE LEADERBOARD</div><h2>Результаты</h2><p>Текущий рейтинг по набранным баллам.</p></div><span class="live"><i></i> LIVE</span></div>
     <div id="resultsList" class="results-list"><p class="empty-state">Результаты появятся после голосования.</p></div>
+    <button id="refreshResultsBtn" class="button button-secondary">Обновить результаты ↻</button>
   </section>
-
+  <section class="tab-page" id="page-settings" hidden>
+    <div class="section-head"><div><div class="eyebrow">PREFERENCES</div><h2>Настройки</h2><p>Подключение сайта к базе данных.</p></div></div>
+    <details class="connection" open><summary><span class="connection-dot"></span> Подключение к Supabase</summary><div class="connection-body">
+      <label>Project URL<input id="supabaseUrl" type="url" placeholder="https://xxxxx.supabase.co"></label>
+      <label>Publishable key<textarea id="supabaseKey" rows="2" placeholder="sb_publishable_..."></textarea></label>
+      <button id="connectBtn" class="button button-primary">Сохранить и подключить</button><p id="connectionStatus" class="status">Не подключено</p>
+    </div></details>
+    <p class="settings-note">Административная панель доступна только владельцу сайта после входа: открой адрес сайта с окончанием <code>#admin</code>.</p>
+  </section>
   <section class="admin-area" id="adminSection" hidden>
-    <div class="admin-heading"><p class="eyebrow">PRIVATE AREA</p><h2>Администратор</h2><p>Доступ только владельцу сайта.</p></div>
+    <div class="section-head"><div><div class="eyebrow">PRIVATE ACCESS</div><h2>Панель администратора</h2><p>Управление участниками конкурса.</p></div></div>
     <div class="admin-card">
       <label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Email администратора"></label>
       <label>Пароль<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Пароль"></label>
-      <div class="admin-buttons"><button id="adminLoginBtn" class="button button-light">Войти</button><button id="adminLogoutBtn" class="button button-muted">Выйти</button></div>
+      <div class="admin-buttons"><button id="adminLoginBtn" class="button button-primary">Войти</button><button id="adminLogoutBtn" class="button button-secondary">Выйти</button></div>
       <p id="adminStatus" class="status" aria-live="polite"></p>
       <div id="adminTools" hidden class="admin-tools"><hr><h3>Добавить участника</h3>
         <label>Страна<input id="countryName" placeholder="Sweden"></label><label>Исполнитель<input id="countryArtist" placeholder="Имя исполнителя"></label><label>Песня<input id="countrySong" placeholder="Название песни"></label>
-        <button id="addCountryBtn" class="button button-start">Добавить участника</button>
+        <button id="addCountryBtn" class="button button-primary">Добавить участника</button>
       </div>
     </div>
   </section>
 </main>
-<footer class="app-footer"><span class="brand-symbol small">e</span><span>EUROVOTE</span><i></i><span>MADE FOR MUSIC LOVERS</span></footer>
-<script src="app.js"></script>
-</body></html>
+<footer class="footer"><span class="logo-mark mini">e</span><b>EUROVOTE</b><span>MADE FOR MUSIC LOVERS</span></footer>
+<script src="app.js"></script></body></html>
