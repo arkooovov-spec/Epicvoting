@@ -86,11 +86,16 @@
     if(error){root.innerHTML='<p class="muted">Не удалось загрузить результаты: '+esc(error.message)+'</p>';return;}
     if(!data?.length){root.innerHTML='<p class="muted">Пока голосов нет.</p>';return;}
     root.innerHTML=data.map((r,i)=>{
-      const country=countries.find(c=>String(c.id)===String(r.country_id));
-      const countryName=country?.name||r.country_name||r.country||r.name||'Участник';
-      const artist=country?.artist||r.artist||'';
-      const points=Number(r.total_points)||0;
-      return `<div class="result-row"><span class="result-rank">${i+1}</span><div class="result-info"><strong>${esc(countryName)}</strong>${artist?`<span class="result-artist">${esc(artist)}</span>`:''}</div><div class="result-points"><strong>${points}</strong><span>очков</span></div></div>`;
+      const rowArtist = r.artist || r.artist_name || r.performer || '';
+      const country = countries.find(c =>
+        (r.country_id != null && String(c.id) === String(r.country_id)) ||
+        (rowArtist && String(c.artist || c.performer || '').trim().toLowerCase() === String(rowArtist).trim().toLowerCase()) ||
+        (r.country_name && String(c.name).trim().toLowerCase() === String(r.country_name).trim().toLowerCase())
+      );
+      const countryName = country?.name || r.country_name || r.country || r.name || 'Участник';
+      const artist = rowArtist || country?.artist || country?.performer || '';
+      const points = Number(r.total_points) || 0;
+      return `<div class="result-row"><span class="result-rank">${i+1}.</span><div class="result-info"><strong>${esc(countryName)}</strong>${artist ? `<span class="result-artist">${esc(artist)}</span>` : ''}</div><div class="result-points"><strong>${points}</strong><span>очков</span></div></div>`;
     }).join('');
   }
   function setupRealtime(){
