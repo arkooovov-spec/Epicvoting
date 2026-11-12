@@ -117,12 +117,21 @@ button,input,textarea{font:inherit}button,a{-webkit-tap-highlight-color:transpar
 @media(max-width:420px){.entry-edit{grid-template-columns:1fr}.entry-edit-name{grid-column:auto}.admin-contest>div{width:100%}}
 
 
-/* EuroVote v4: heart-shaped country flags */
+/* EuroVote v5: fully filled Eurovision-inspired flag hearts */
 .flag-circle{display:none!important}
-.flag-heart{width:38px;height:36px;min-width:38px;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;position:relative;clip-path:polygon(50% 94%,7% 51%,5% 37%,9% 24%,19% 15%,32% 13%,42% 19%,50% 29%,58% 19%,68% 13%,81% 15%,91% 24%,95% 37%,93% 51%);background:#fff;filter:drop-shadow(0 2px 4px #10051d66);}
-.flag-heart>span{display:block;font-family:"Apple Color Emoji","Segoe UI Emoji",sans-serif;font-size:24px;line-height:1;transform:translateY(-1px);}
+.flag-heart{
+  width:40px;height:38px;min-width:40px;display:inline-block;position:relative;
+  vertical-align:middle;flex:none;overflow:hidden;
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 92'%3E%3Cpath fill='white' d='M50 90 C43 83 8 55 3 34 C-3 9 25 -5 43 10 C46 13 49 17 50 20 C54 12 64 5 76 7 C94 9 104 27 96 45 C88 64 62 84 50 90 Z'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 92'%3E%3Cpath fill='white' d='M50 90 C43 83 8 55 3 34 C-3 9 25 -5 43 10 C46 13 49 17 50 20 C54 12 64 5 76 7 C94 9 104 27 96 45 C88 64 62 84 50 90 Z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-position:center;mask-position:center;
+  -webkit-mask-size:100% 100%;mask-size:100% 100%;
+  background:#fff;filter:drop-shadow(0 2px 3px #10051d66);
+}
+.flag-heart .flag-emoji{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"Apple Color Emoji","Segoe UI Emoji",sans-serif;font-size:29px;line-height:1;z-index:0}
+.flag-heart img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1}
 .result-info>strong .flag-heart{flex:none}
-.country-option .flag-heart{width:31px;height:30px;min-width:31px}
-.country-option .flag-heart>span{font-size:20px}
-.vote-country .flag-heart{width:36px;height:34px;min-width:36px}
-@media(max-width:420px){.vote-country .flag-heart{width:34px;height:32px;min-width:34px}.country-option .flag-heart{width:29px;height:28px;min-width:29px}}
+.country-option .flag-heart{width:32px;height:31px;min-width:32px}
+.vote-country .flag-heart{width:38px;height:36px;min-width:38px}
+@media(max-width:420px){.vote-country .flag-heart{width:36px;height:34px;min-width:36px}.country-option .flag-heart{width:30px;height:29px;min-width:30px}}
