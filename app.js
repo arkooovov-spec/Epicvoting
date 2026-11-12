@@ -4,7 +4,7 @@
  let voter=null,admin=null,catalog=[],contests=[],entries=[],activeContest=null,alreadyVoted=false,editingId=null;
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const flag=iso=>String(iso||'').toUpperCase().replace(/[A-Z]/g,c=>String.fromCodePoint(c.charCodeAt(0)+127397));
- const circle=iso=>{const code=String(iso||'').toLowerCase();return `<span class="flag-heart" role="img" aria-label="Флаг ${esc(iso)}"><span class="flag-emoji">${flag(iso)}</span><img src="https://flagcdn.com/w80/${esc(code)}.png" alt="" loading="lazy" onerror="this.style.display='none'"></span>`;};
+ const circle=iso=>{const code=String(iso||'').toLowerCase();return `<span class="flag-plain" role="img" aria-label="Флаг ${esc(iso)}"><span class="flag-emoji">${flag(iso)}</span><img src="https://flagcdn.com/w80/${esc(code)}.png" alt="" loading="lazy" onerror="this.style.display='none'"></span>`;};
  function msg(id,s,bad=false){const e=$(id);if(e){e.textContent=s;e.style.color=bad?'#ff9aaa':'';}}
  async function connect(){if(!window.supabase?.createClient)return msg('connectionStatus','Не загрузилась библиотека Supabase. Проверь интернет.',true);
   voter=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'eurovote-voter-auth'}});
