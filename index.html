@@ -4,49 +4,17 @@
 <meta name="theme-color" content="#241039"><title>EuroVote</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=eu_results_v2"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
+<link rel="stylesheet" href="style.css?v=multi_contests_v3"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
 <body>
 <header class="topbar"><a class="logo" href="#"><span class="logo-mark">e</span><span>EuroVote</span></a><span class="top-caption">EUROVISION COMMUNITY</span></header>
 <main class="shell">
-  <section class="welcome" id="welcome"><div class="welcome-kicker">MUSIC · VOTING · COMMUNITY</div><h1>Твой голос.<br><em>Твоя музыка.</em></h1><p>Выбирай выступления, которые запомнились тебе больше всего.</p></section>
-  <nav class="tabs" aria-label="Разделы сайта">
-    <button class="tab active" data-tab="voting"><span>◉</span> Голосование</button>
-    <button class="tab" data-tab="results"><span>🏆</span> Результаты</button>
-    <button class="tab" data-tab="settings"><span>⚙</span> Настройки</button>
-  </nav>
-  <section class="tab-page active" id="page-voting">
-    <div class="section-head"><div><div class="eyebrow">YOUR VOTE</div><h2>Голосование</h2><p>Распредели 10 оценок между любимыми выступлениями.</p></div><div class="points-mark"><b>12</b><small>POINTS</small></div></div>
-    <div id="voteIdentity" class="notice">Подключаем голосование…</div>
-    <div id="voteList" class="vote-list"><p class="empty-state">Список участников появится здесь.</p></div>
-    <div class="submit-wrap"><button id="submitVoteBtn" class="button button-primary" disabled>Отправить голос <span>→</span></button><p id="voteStatus" class="status" aria-live="polite"></p></div>
-  </section>
-  <section class="tab-page" id="page-results" hidden>
-    <div class="section-head"><div><div class="eyebrow">LIVE LEADERBOARD</div><h2>Результаты</h2><p>Текущий рейтинг по набранным баллам.</p></div><span class="live"><i></i> LIVE</span></div>
-    <div id="resultsList" class="results-list"><p class="empty-state">Результаты появятся после голосования.</p></div>
-    <button id="refreshResultsBtn" class="button button-secondary">Обновить результаты ↻</button>
-  </section>
-  <section class="tab-page" id="page-settings" hidden>
-    <div class="section-head"><div><div class="eyebrow">PREFERENCES</div><h2>Настройки</h2><p>Подключение сайта к базе данных.</p></div></div>
-    <details class="connection" open><summary><span class="connection-dot"></span> Подключение к Supabase</summary><div class="connection-body">
-      <label>Project URL<input id="supabaseUrl" type="url" placeholder="https://xxxxx.supabase.co"></label>
-      <label>Publishable key<textarea id="supabaseKey" rows="2" placeholder="sb_publishable_..."></textarea></label>
-      <button id="connectBtn" class="button button-primary">Сохранить и подключить</button><p id="connectionStatus" class="status">Не подключено</p>
-    </div></details>
-    <p class="settings-note">Административная панель доступна только владельцу сайта после входа: открой адрес сайта с окончанием <code>#admin</code>.</p>
-  </section>
-  <section class="admin-area" id="adminSection" hidden>
-    <div class="section-head"><div><div class="eyebrow">PRIVATE ACCESS</div><h2>Панель администратора</h2><p>Управление участниками конкурса.</p></div></div>
-    <div class="admin-card">
-      <label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Email администратора"></label>
-      <label>Пароль<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Пароль"></label>
-      <div class="admin-buttons"><button id="adminLoginBtn" class="button button-primary">Войти</button><button id="adminLogoutBtn" class="button button-secondary">Выйти</button></div>
-      <p id="adminStatus" class="status" aria-live="polite"></p>
-      <div id="adminTools" hidden class="admin-tools"><hr><h3>Добавить участника</h3>
-        <label>Страна<input id="countryName" placeholder="Sweden"></label><label>Исполнитель<input id="countryArtist" placeholder="Имя исполнителя"></label><label>Песня<input id="countrySong" placeholder="Название песни"></label>
-        <button id="addCountryBtn" class="button button-primary">Добавить участника</button>
-      </div>
-    </div>
-  </section>
-</main>
-<footer class="footer"><span class="logo-mark mini">e</span><b>EUROVOTE</b><span>MADE FOR MUSIC LOVERS</span></footer>
-<script src="app.js?v=eu_results_v2"></script></body></html>
+<section class="welcome" id="welcome"><div class="welcome-kicker">MUSIC · VOTING · COMMUNITY</div><h1>Твой голос.<br><em>Твоя музыка.</em></h1><p>Выбирай выступления, которые запомнились тебе больше всего.</p></section>
+<nav class="tabs" aria-label="Разделы сайта"><button class="tab active" data-tab="voting"><span>◉</span> Голосование</button><button class="tab" data-tab="results"><span>🏆</span> Результаты</button><button class="tab" data-tab="settings"><span>⚙</span> Настройки</button></nav>
+<section class="tab-page active" id="page-voting"><div class="section-head"><div><div class="eyebrow">YOUR VOTE</div><h2>Голосование</h2><p>Распредели 10 разных оценок между участниками.</p></div><div class="points-mark"><b>12</b><small>POINTS</small></div></div>
+<div class="contest-picker"><label for="contestSelect">Выбери голосование</label><select id="contestSelect"><option value="">Загружаем…</option></select></div><div id="voteIdentity" class="notice">Подключаем голосование…</div><div id="voteList" class="vote-list"><p class="empty-state">Список участников появится здесь.</p></div>
+<div class="submit-wrap"><button id="submitVoteBtn" class="button button-primary" disabled>Отправить голос <span>→</span></button><p id="voteStatus" class="status" aria-live="polite"></p></div></section>
+<section class="tab-page" id="page-results" hidden><div class="section-head"><div><div class="eyebrow">LIVE LEADERBOARD</div><h2>Результаты</h2><p>Рейтинг выбранного голосования.</p></div><span class="live"><i></i> LIVE</span></div><div class="contest-picker"><label for="resultsContestSelect">Голосование</label><select id="resultsContestSelect"></select></div><div id="resultsList" class="results-list"><p class="empty-state">Результаты появятся после голосования.</p></div><button id="refreshResultsBtn" class="button button-secondary">Обновить результаты ↻</button></section>
+<section class="tab-page" id="page-settings" hidden><div class="section-head"><div><div class="eyebrow">PREFERENCES</div><h2>Настройки</h2><p>Подключение к базе данных.</p></div></div><details class="connection"><summary><span class="connection-dot"></span> Подключение к Supabase</summary><div class="connection-body"><p id="connectionStatus" class="status">Подключаемся автоматически…</p></div></details><p class="settings-note">Панель администратора доступна владельцу сайта по адресу с окончанием <code>#admin</code>.</p></section>
+<section class="admin-area" id="adminSection" hidden><div class="section-head"><div><div class="eyebrow">PRIVATE ACCESS</div><h2>Панель администратора</h2><p>Создание и управление конкурсами.</p></div></div><div class="admin-card"><label>Email<input id="adminEmail" type="email" autocomplete="username" placeholder="Email администратора"></label><label>Пароль<input id="adminPassword" type="password" autocomplete="current-password" placeholder="Пароль"></label><div class="admin-buttons"><button id="adminLoginBtn" class="button button-primary">Войти</button><button id="adminLogoutBtn" class="button button-secondary">Выйти</button></div><p id="adminStatus" class="status" aria-live="polite"></p>
+<div id="adminTools" hidden class="admin-tools"><hr><h3>Создать голосование</h3><label>Название<input id="newContestTitle" placeholder="Например, Eurovision 2026"></label><p class="muted">Выбери страны-участницы. Для голосования нужно не менее 10 стран.</p><input id="countrySearch" placeholder="Поиск страны…"><div id="countryPicker" class="country-picker"></div><button id="createContestBtn" class="button button-primary">Создать голосование</button><p id="contestAdminStatus" class="status"></p><hr><h3>Мои голосования</h3><div id="adminContestList"></div><hr><div id="editContestPanel" hidden><h3>Редактировать голосование</h3><input id="editContestTitle" placeholder="Название голосования"><div id="entryEditor"></div><button id="saveContestBtn" class="button button-primary">Сохранить изменения</button><button id="cancelEditBtn" class="button button-secondary">Отмена</button><p id="editStatus" class="status"></p></div></div></div></section>
+</main><footer class="footer"><span class="logo-mark mini">e</span><b>EUROVOTE</b><span>MADE FOR MUSIC LOVERS</span></footer><script src="app.js?v=multi_contests_v3"></script></body></html>

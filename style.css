@@ -95,3 +95,23 @@ button,input,textarea{font:inherit}button,a{-webkit-tap-highlight-color:transpar
 #resultsList .result-points strong {display:block !important;position:static !important;margin:0 !important;padding:0 !important;font:800 16px/1.2 Outfit,sans-serif !important;color:#f18aca !important}
 #resultsList .result-points span {display:block !important;position:static !important;margin:2px 0 0 !important;padding:0 !important;font:600 10px/1.2 Manrope,sans-serif !important;color:#d9c5e6 !important}
 @media(max-width:380px){#resultsList .result-row{grid-template-columns:24px minmax(0,1fr) 56px !important;gap:7px !important}#resultsList .result-points{width:56px !important;min-width:56px !important}#resultsList .result-info strong{font-size:12px !important}}
+
+/* Multi-contest controls and circular flag badges */
+.contest-picker{margin:14px 0 18px}
+.contest-picker label{display:block;margin-bottom:7px;font-size:13px;font-weight:700;color:#d8b9e8}
+.contest-picker select{width:100%;padding:13px 15px;border-radius:14px;background:#21102f;color:#fff;border:1px solid #80519a;font:inherit}
+.vote-country{display:flex;align-items:center;gap:11px;min-width:0}
+.vote-country>div{display:flex;flex-direction:column;min-width:0}
+.flag-circle{width:34px;height:34px;min-width:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;border:1px solid rgba(255,255,255,.35);font-family:"Apple Color Emoji","Segoe UI Emoji",sans-serif;font-size:23px;line-height:1;box-shadow:0 2px 7px #10051d55;vertical-align:middle}
+.result-info>strong{display:flex!important;align-items:center;gap:8px}
+.country-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:340px;overflow:auto;padding:9px;border:1px solid #69427f;border-radius:14px;margin:10px 0 14px;background:#210f30}
+.country-option{display:flex;align-items:center;gap:8px;padding:7px;border-radius:10px;background:#ffffff0b;font-size:12px;min-width:0}
+.country-option span:nth-child(2){flex:1;min-width:0}
+.country-option input{width:17px;height:17px;accent-color:#a43ed0}
+.admin-contest{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #ffffff22}
+.admin-contest>strong{flex:1 1 100%;font-size:14px}
+.admin-contest>span{font-size:12px;color:#d9b8e7}
+.admin-contest button{font-size:12px;padding:8px 11px}
+@media(max-width:420px){.country-picker{grid-template-columns:1fr}.flag-circle{width:31px;height:31px;min-width:31px;font-size:21px}}
+.entry-edit{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px 0;border-bottom:1px solid #ffffff20}.entry-edit-name{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:12px}.entry-edit input{margin:0}.admin-contest>div{display:flex;flex-wrap:wrap;gap:6px}.admin-contest button{margin:0}.vote-row select option:disabled{color:#aaa;background:#e8e8e8}.country-option .flag-circle{width:28px;height:28px;min-width:28px;font-size:19px}
+@media(max-width:420px){.entry-edit{grid-template-columns:1fr}.entry-edit-name{grid-column:auto}.admin-contest>div{width:100%}}

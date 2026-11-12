@@ -1,156 +1,51 @@
 (() => {
-  const $ = id => document.getElementById(id);
-  const POINTS = [12,10,8,7,6,5,4,3,2,1];
-  const DEFAULT_SUPABASE_URL = 'https://rbsqumtcbxlppeqzxakd.supabase.co';
-  const DEFAULT_SUPABASE_KEY = 'sb_publishable_jFL37i1rb6Exx9VPA707qw_Cj-627r8';
-  let sb = null, countries = [], channel = null, anonymousUserId = null, alreadyVoted = false;
-
-  function say(id, message, error=false) {
-    const el=$(id); if(!el) return;
-    el.textContent=message; el.style.color=error?'#ff8da9':'';
-  }
-  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  function restore(){
-    $('supabaseUrl').value=localStorage.getItem('ev_url')||DEFAULT_SUPABASE_URL;
-    $('supabaseKey').value=localStorage.getItem('ev_key')||DEFAULT_SUPABASE_KEY;
-  }
-  async function connect(){
-    const url=$('supabaseUrl').value.trim().replace(/\/+$/,'');
-    const key=$('supabaseKey').value.trim();
-    if(!url||!key) return say('connectionStatus','Введи URL и публичный ключ.',true);
-    if(!window.supabase?.createClient) return say('connectionStatus','Не загрузилась библиотека Supabase. Проверь интернет.',true);
-    localStorage.setItem('ev_url',url); localStorage.setItem('ev_key',key);
-    sb=window.supabase.createClient(url,key);
-    say('connectionStatus','Подключаемся…');
-    const {data:sessionData,error:sessionError}=await sb.auth.getSession();
-    if(sessionError) return say('connectionStatus',sessionError.message,true);
-    let session=sessionData.session;
-    if(!session){
-      const {data,error}=await sb.auth.signInAnonymously();
-      if(error) return say('connectionStatus','Не удалось создать анонимную учётную запись: '+error.message+'. Проверь, включена ли Anonymous Sign-Ins в Supabase.',true);
-      session=data.session;
-    }
-    anonymousUserId=session?.user?.id||null;
-    if(!anonymousUserId) return say('connectionStatus','Не удалось получить идентификатор участника.',true);
-    await loadCountries();
-    await checkVoteStatus();
-    await loadResults();
-    setupRealtime();
-    say('connectionStatus','Сайт подключён. Участников: '+countries.length);
-  }
-  async function loadCountries(){
-    const {data,error}=await sb.from('countries').select('*').order('name');
-    if(error){say('connectionStatus','Ошибка загрузки стран: '+error.message,true);return;}
-    countries=data||[]; renderCountries();
-  }
-  function flagFor(name){
-    const flags={Albania:'🇦🇱',Armenia:'🇦🇲',Austria:'🇦🇹',Azerbaijan:'🇦🇿',Belgium:'🇧🇪',Croatia:'🇭🇷',Cyprus:'🇨🇾',Czechia:'🇨🇿',Denmark:'🇩🇰',Estonia:'🇪🇪',Finland:'🇫🇮',France:'🇫🇷',Georgia:'🇬🇪',Germany:'🇩🇪',Greece:'🇬🇷',Iceland:'🇮🇸',Ireland:'🇮🇪',Israel:'🇮🇱',Italy:'🇮🇹',Latvia:'🇱🇻',Lithuania:'🇱🇹',Luxembourg:'🇱🇺',Malta:'🇲🇹',Moldova:'🇲🇩',Montenegro:'🇲🇪',Netherlands:'🇳🇱',Norway:'🇳🇴',Poland:'🇵🇱',Portugal:'🇵🇹',Romania:'🇷🇴',SanMarino:'🇸🇲',Serbia:'🇷🇸',Slovenia:'🇸🇮',Spain:'🇪🇸',Sweden:'🇸🇪',Switzerland:'🇨🇭',Ukraine:'🇺🇦',UnitedKingdom:'🇬🇧'};
-    return (flags[String(name||'').replace(/\\s+/g,'')]||'🌍');
-  }
-  function renderCountries(){
-    const root=$('voteList');
-    if(alreadyVoted){root.innerHTML='<div class="notice">Твой голос уже принят. Повторно проголосовать с этой учётной записи нельзя. Спасибо!</div>';$('submitVoteBtn').disabled=true;return;}
-    if(!countries.length){root.innerHTML='<p class="muted">Пока нет добавленных стран.</p>';$('submitVoteBtn').disabled=true;return;}
-    root.innerHTML=countries.map(c=>`<div class="vote-row"><div><strong>${flagFor(c.name)} ${esc(c.name)}</strong><small>${esc([c.artist,c.song].filter(Boolean).join(' — '))}</small></div><select aria-label="Баллы для ${esc(c.name)}" data-country="${esc(c.id)}"><option value="">0</option>${POINTS.map(p=>`<option value="${p}">${p}</option>`).join('')}</select></div>`).join('');
-    root.querySelectorAll('select').forEach(s=>s.addEventListener('change',validate));
-    validate();
-  }
-  function validate(){
-    const vals=[...$('voteList').querySelectorAll('select')].map(s=>s.value).filter(Boolean);
-    const ok=vals.length===10&&new Set(vals).size===10;
-    $('submitVoteBtn').disabled=!ok||alreadyVoted;
-    if(vals.length) say('voteStatus',ok?'Все 10 оценок распределены.':'Выбрано оценок: '+vals.length+' из 10. Каждую оценку можно использовать один раз.');
-  }
-  async function checkVoteStatus(){
-    const {data,error}=await sb.rpc('has_current_user_voted');
-    if(error){say('voteStatus','Не удалось проверить статус голоса: '+error.message,true);return;}
-    alreadyVoted=!!data;
-    $('voteIdentity').textContent=alreadyVoted?'Голос с этого браузера уже отправлен.':'Готово! Ты можешь проголосовать один раз.';
-    renderCountries();
-    if(alreadyVoted) say('voteStatus','Голос уже принят. Спасибо за участие!');
-  }
-  async function submitVote(){
-    if(!sb||!anonymousUserId) return say('voteStatus','Сначала подключи сайт.',true);
-    if(alreadyVoted) return say('voteStatus','Этот аккаунт уже голосовал.',true);
-    const selections=[...$('voteList').querySelectorAll('select')];
-    const allocations=selections.filter(s=>s.value).map(s=>({country_id:s.dataset.country,points:Number(s.value)}));
-    if(allocations.length!==10||new Set(allocations.map(a=>a.points)).size!==10) return say('voteStatus','Распредели все десять оценок от 12 до 1 без повторов.',true);
-    $('submitVoteBtn').disabled=true;say('voteStatus','Сохраняем голос…');
-    const {data,error}=await sb.rpc('submit_anonymous_vote',{p_allocations:allocations});
-    if(error){say('voteStatus',error.message.includes('already voted')?'Ты уже голосовал с этой учётной записи.':error.message,true);await checkVoteStatus();return;}
-    alreadyVoted=true;
-    $('voteIdentity').textContent='Голос отправлен. Спасибо!';
-    renderCountries();
-    say('voteStatus','Голос принят! Повторно проголосовать с этой учётной записи нельзя.');
-    await loadResults();
-  }
-  async function loadResults(){
-    if(!sb)return;
-    const root=$('resultsList');
-    const {data,error}=await sb.from('results').select('*').order('total_points',{ascending:false});
-    if(error){root.innerHTML='<p class="muted">Не удалось загрузить результаты: '+esc(error.message)+'</p>';return;}
-    if(!data?.length){root.innerHTML='<p class="muted">Пока голосов нет.</p>';return;}
-    root.innerHTML=data.map((r,i)=>{
-      const rowArtist = r.artist || r.artist_name || r.performer || '';
-      const country = countries.find(c =>
-        (r.country_id != null && String(c.id) === String(r.country_id)) ||
-        (rowArtist && String(c.artist || c.performer || '').trim().toLowerCase() === String(rowArtist).trim().toLowerCase()) ||
-        (r.country_name && String(c.name).trim().toLowerCase() === String(r.country_name).trim().toLowerCase())
-      );
-      const countryName = country?.name || r.country_name || r.country || r.name || 'Участник';
-      const artist = rowArtist || country?.artist || country?.performer || '';
-      const points = Number(r.total_points) || 0;
-      return `<div class="result-row"><span class="result-rank">${i+1}.</span><div class="result-info"><strong>${esc(countryName)}</strong>${artist ? `<span class="result-artist">${esc(artist)}</span>` : ''}</div><div class="result-points"><strong>${points}</strong><span>очков</span></div></div>`;
-    }).join('');
-  }
-  function setupRealtime(){
-    if(channel)sb.removeChannel(channel);
-    channel=sb.channel('eurovote-live-results').on('postgres_changes',{event:'INSERT',schema:'public',table:'vote_items'},()=>loadResults()).subscribe();
-  }
-  async function adminLogin(){
-    if(!sb)return say('adminStatus','Сначала подключи сайт.',true);
-    const {data,error}=await sb.auth.signInWithPassword({email:$('adminEmail').value.trim(),password:$('adminPassword').value});
-    if(error)return say('adminStatus','Не удалось войти. Проверь email и пароль.',true);
-    if(data.user?.app_metadata?.role!=='admin'){
-      await sb.auth.signOut();
-      return say('adminStatus','У этого аккаунта нет прав администратора.',true);
-    }
-    $('adminTools').hidden=false;say('adminStatus','Вход администратора выполнен.');
-    await loadCountries();
-  }
-  async function adminLogout(){
-    if(sb)await sb.auth.signOut();
-    $('adminTools').hidden=true;say('adminStatus','Вы вышли из аккаунта администратора. Для голосования снова подключи сайт, чтобы создать анонимную сессию.');
-    anonymousUserId=null;
-  }
-  async function addCountry(){
-    const name=$('countryName').value.trim(),artist=$('countryArtist').value.trim(),song=$('countrySong').value.trim();
-    if(!name)return say('adminStatus','Укажи название страны.',true);
-    const {error}=await sb.from('countries').insert({name,artist,song});
-    if(error)return say('adminStatus','Не удалось добавить: '+error.message,true);
-    $('countryName').value='';$('countryArtist').value='';$('countrySong').value='';
-    say('adminStatus','Участник добавлен.');await loadCountries();
-  }
-  $('connectBtn').addEventListener('click',connect);
-  $('submitVoteBtn').addEventListener('click',submitVote);
-  $('refreshResultsBtn').addEventListener('click',loadResults);
-  $('adminLoginBtn').addEventListener('click',adminLogin);
-  $('adminLogoutBtn').addEventListener('click',adminLogout);
-  $('addCountryBtn').addEventListener('click',addCountry);
-  function activateTab(name){
-    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-    document.querySelectorAll('.tab-page').forEach(p=>{p.hidden=p.id!=='page-'+name;});
-  }
-  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.tab)));
-  function updateAdminVisibility(){
-    const isAdmin = location.hash === '#admin';
-    $('adminSection').hidden = !isAdmin;
-    $('welcome').hidden = isAdmin;
-    document.querySelector('.tabs').hidden = isAdmin;
-    document.querySelectorAll('.tab-page').forEach(p=>p.hidden=isAdmin || p.id!=='page-voting');
-  }
-  window.addEventListener('hashchange', updateAdminVisibility);
-  updateAdminVisibility();
-  restore();
-  connect();
+ const $=id=>document.getElementById(id), POINTS=[12,10,8,7,6,5,4,3,2,1];
+ const URL='https://rbsqumtcbxlppeqzxakd.supabase.co', KEY='sb_publishable_jFL37i1rb6Exx9VPA707qw_Cj-627r8';
+ let voter=null,admin=null,catalog=[],contests=[],entries=[],activeContest=null,alreadyVoted=false,editingId=null;
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const flag=iso=>String(iso||'').toUpperCase().replace(/[A-Z]/g,c=>String.fromCodePoint(c.charCodeAt(0)+127397));
+ const circle=iso=>`<span class="flag-circle" aria-label="${esc(iso)}">${flag(iso)}</span>`;
+ function msg(id,s,bad=false){const e=$(id);if(e){e.textContent=s;e.style.color=bad?'#ff9aaa':'';}}
+ async function connect(){if(!window.supabase?.createClient)return msg('connectionStatus','Не загрузилась библиотека Supabase. Проверь интернет.',true);
+  voter=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'eurovote-voter-auth'}});
+  admin=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'eurovote-admin-auth'}});
+  let s=await voter.auth.getSession();if(s.error)return msg('connectionStatus',s.error.message,true);if(!s.data.session){let a=await voter.auth.signInAnonymously();if(a.error)return msg('connectionStatus','Не удалось создать анонимную сессию: '+a.error.message,true);}
+  let c=await voter.from('country_catalog').select('*').order('name');if(c.error)return msg('connectionStatus','Ошибка каталога стран: '+c.error.message,true);catalog=c.data||[];
+  msg('connectionStatus','Подключено. В каталоге стран: '+catalog.length);await loadContests();
+ }
+ async function loadContests(){let r=await voter.from('contests').select('*').order('created_at',{ascending:false});if(r.error)return msg('voteStatus',r.error.message,true);contests=r.data||[];
+  const options=contests.map(c=>`<option value="${c.id}">${esc(c.title)}${c.is_open?'':' (закрыто)'}</option>`).join('')||'<option value="">Пока нет голосований</option>';
+  $('contestSelect').innerHTML=options;$('resultsContestSelect').innerHTML=options;
+  if(!activeContest||!contests.some(c=>c.id===activeContest))activeContest=(contests.find(c=>c.is_open)||contests[0])?.id||null;
+  $('contestSelect').value=activeContest||'';$('resultsContestSelect').value=activeContest||'';await selectContest(activeContest);renderAdminContests();
+ }
+ async function selectContest(id){activeContest=id||null;entries=[];alreadyVoted=false;if(!id){$('voteList').innerHTML='<p class="empty-state">Пока нет голосований.</p>';$('resultsList').innerHTML='<p class="empty-state">Результаты появятся здесь.</p>';$('submitVoteBtn').disabled=true;$('voteIdentity').textContent='Ожидаем создания голосования.';return;}
+  const contest=contests.find(c=>c.id===id);const r=await voter.from('contest_entries').select('*,country_catalog(name)').eq('contest_id',id).order('iso2');if(r.error){msg('voteStatus',r.error.message,true);return;}entries=r.data||[];
+  const v=await voter.rpc('has_voted_in_contest',{p_contest_id:id});if(v.error){msg('voteStatus',v.error.message,true);return;}alreadyVoted=!!v.data;
+  $('voteIdentity').textContent=alreadyVoted?'Твой голос в этом конкурсе уже принят.':(contest?.is_open?'Можно проголосовать один раз в этом конкурсе.':'Голосование закрыто.');renderVote();await loadResults(id);
+ }
+ function renderVote(){const root=$('voteList'),contest=contests.find(c=>c.id===activeContest);if(alreadyVoted){root.innerHTML='<div class="notice">Твой голос уже принят. Спасибо!</div>';$('submitVoteBtn').disabled=true;return;}
+  if(!contest?.is_open){root.innerHTML='<div class="notice">Это голосование сейчас закрыто.</div>';$('submitVoteBtn').disabled=true;return;}
+  if(entries.length<10){root.innerHTML='<p class="empty-state">В этом конкурсе должно быть не менее 10 участников.</p>';$('submitVoteBtn').disabled=true;return;}
+  root.innerHTML=entries.map(e=>`<div class="vote-row"><div class="vote-country">${circle(e.iso2)}<div><strong>${esc(e.country_catalog?.name||e.iso2)}</strong><small>${esc([e.artist,e.song].filter(Boolean).join(' — '))}</small></div></div><select aria-label="Баллы для ${esc(e.country_catalog?.name||e.iso2)}" data-entry="${e.id}"><option value="">—</option>${POINTS.map(p=>`<option value="${p}">${p} баллов</option>`).join('')}</select></div>`).join('');root.querySelectorAll('select').forEach(s=>s.addEventListener('change',validate));validate();
+ }
+ function validate(){const selects=[...$('voteList').querySelectorAll('select')],used=selects.map(s=>s.value).filter(Boolean);selects.forEach(s=>{[...s.options].forEach(o=>{if(!o.value)return;o.disabled=used.includes(o.value)&&s.value!==o.value;});});const ok=used.length===10&&new Set(used).size===10;$('submitVoteBtn').disabled=!ok||alreadyVoted||!contests.find(c=>c.id===activeContest)?.is_open;
+  if(used.length)msg('voteStatus',ok?'Все 10 разных оценок распределены. Можно отправлять голос.':`Использовано баллов: ${used.length} из 10. Уже выбранные баллы недоступны в остальных списках.`);
+ }
+ async function submitVote(){const alloc=[...$('voteList').querySelectorAll('select')].filter(s=>s.value).map(s=>({entry_id:s.dataset.entry,points:Number(s.value)}));if(alloc.length!==10||new Set(alloc.map(x=>x.points)).size!==10)return msg('voteStatus','Распредели все 10 разных оценок.',true);$('submitVoteBtn').disabled=true;msg('voteStatus','Сохраняем голос…');const r=await voter.rpc('submit_contest_vote',{p_contest_id:activeContest,p_allocations:alloc});if(r.error){msg('voteStatus',r.error.message,true);$('submitVoteBtn').disabled=false;return;}alreadyVoted=true;renderVote();msg('voteStatus','Голос принят! Спасибо за участие.');}
+ async function loadResults(id=activeContest){if(!id)return;const r=await voter.rpc('contest_results',{p_contest_id:id});if(r.error){$('resultsList').innerHTML=`<p class="empty-state">${esc(r.error.message)}</p>`;return;}const data=r.data||[];$('resultsList').innerHTML=data.length?data.map((x,i)=>`<div class="result-row"><span class="result-rank">${i+1}.</span><div class="result-info"><strong>${circle(x.iso2)} ${esc(x.country_name)}</strong>${x.artist?`<span class="result-artist">${esc(x.artist)}</span>`:''}</div><div class="result-points"><strong>${Number(x.total_points)||0}</strong><span>очков</span></div></div>`).join(''):'<p class="empty-state">Пока голосов нет.</p>';}
+ function renderPicker(){const checked=new Set([...$('countryPicker').querySelectorAll('input:checked')].map(x=>x.value)),q=$('countrySearch').value.trim().toLowerCase();$('countryPicker').innerHTML=catalog.filter(c=>c.name.toLowerCase().includes(q)||c.iso2.toLowerCase().includes(q)).map(c=>`<label class="country-option">${circle(c.iso2)}<span>${esc(c.name)}</span><input type="checkbox" value="${c.iso2}" ${checked.has(c.iso2)?'checked':''}></label>`).join('');}
+ async function createContest(){const title=$('newContestTitle').value.trim(),selected=[...$('countryPicker').querySelectorAll('input:checked')].map(x=>x.value);if(!title)return msg('contestAdminStatus','Введи название конкурса.',true);if(selected.length<10)return msg('contestAdminStatus','Выбери минимум 10 стран.',true);msg('contestAdminStatus','Создаём…');const c=await admin.from('contests').insert({title,is_open:true}).select().single();if(c.error)return msg('contestAdminStatus',c.error.message,true);const ins=await admin.from('contest_entries').insert(selected.map(iso2=>({contest_id:c.data.id,iso2,artist:'',song:''})));if(ins.error){await admin.from('contests').delete().eq('id',c.data.id);return msg('contestAdminStatus',ins.error.message,true);} $('newContestTitle').value='';msg('contestAdminStatus','Конкурс создан! Теперь можешь добавить исполнителей и песни через редактирование.');await loadContests();activeContest=c.data.id;$('contestSelect').value=activeContest;await selectContest(activeContest);}
+ function renderAdminContests(){if(!$('adminContestList'))return;$('adminContestList').innerHTML=contests.map(c=>`<div class="admin-contest"><strong>${esc(c.title)}</strong><span>${c.is_open?'Открыто':'Закрыто'}</span><div><button class="button button-secondary" data-edit="${c.id}">Изменить</button><button class="button button-secondary" data-toggle="${c.id}">${c.is_open?'Закрыть':'Открыть'}</button><button class="button button-secondary" data-delete="${c.id}">Удалить</button></div></div>`).join('')||'<p class="muted">Голосований пока нет.</p>';
+  $('adminContestList').querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const c=contests.find(x=>x.id===b.dataset.toggle),r=await admin.from('contests').update({is_open:!c.is_open}).eq('id',c.id);if(r.error)msg('contestAdminStatus',r.error.message,true);else await loadContests();});
+  $('adminContestList').querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{const c=contests.find(x=>x.id===b.dataset.delete);if(!confirm(`Удалить «${c.title}» вместе со всеми голосами? Это действие нельзя отменить.`))return;const r=await admin.from('contests').delete().eq('id',c.id);if(r.error)msg('contestAdminStatus',r.error.message,true);else{if(activeContest===c.id)activeContest=null;await loadContests();}});
+  $('adminContestList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEditor(b.dataset.edit));
+ }
+ async function openEditor(id){editingId=id;const c=contests.find(x=>x.id===id);$('editContestPanel').hidden=false;$('editContestTitle').value=c.title;const r=await admin.from('contest_entries').select('*,country_catalog(name)').eq('contest_id',id).order('iso2');if(r.error)return msg('editStatus',r.error.message,true);$('entryEditor').innerHTML=(r.data||[]).map(e=>`<div class="entry-edit" data-id="${e.id}"><div class="entry-edit-name">${circle(e.iso2)} <b>${esc(e.country_catalog?.name||e.iso2)}</b></div><input data-field="artist" placeholder="Исполнитель" value="${esc(e.artist)}"><input data-field="song" placeholder="Песня" value="${esc(e.song)}"></div>`).join('');}
+ async function saveEditor(){const title=$('editContestTitle').value.trim();if(!title)return msg('editStatus','Название не может быть пустым.',true);let r=await admin.from('contests').update({title}).eq('id',editingId);if(r.error)return msg('editStatus',r.error.message,true);for(const row of $('entryEditor').querySelectorAll('.entry-edit')){const data={};row.querySelectorAll('[data-field]').forEach(i=>data[i.dataset.field]=i.value.trim());const u=await admin.from('contest_entries').update(data).eq('id',row.dataset.id);if(u.error)return msg('editStatus',u.error.message,true);}msg('editStatus','Изменения сохранены.');$('editContestPanel').hidden=true;await loadContests();}
+ async function adminLogin(){const r=await admin.auth.signInWithPassword({email:$('adminEmail').value.trim(),password:$('adminPassword').value});if(r.error)return msg('adminStatus','Не удалось войти. Проверь email и пароль.',true);if(r.data.user?.app_metadata?.role!=='admin'){await admin.auth.signOut();return msg('adminStatus','У этого аккаунта нет прав администратора.',true);} $('adminTools').hidden=false;msg('adminStatus','Вход выполнен.');renderPicker();renderAdminContests();}
+ async function adminLogout(){await admin.auth.signOut();$('adminTools').hidden=true;msg('adminStatus','Вы вышли из панели администратора.');}
+ $('submitVoteBtn').addEventListener('click',submitVote);$('refreshResultsBtn').addEventListener('click',()=>loadResults($('resultsContestSelect').value));$('contestSelect').addEventListener('change',e=>{selectContest(e.target.value);$('resultsContestSelect').value=e.target.value;});$('resultsContestSelect').addEventListener('change',e=>loadResults(e.target.value));$('adminLoginBtn').addEventListener('click',adminLogin);$('adminLogoutBtn').addEventListener('click',adminLogout);$('createContestBtn').addEventListener('click',createContest);$('countrySearch').addEventListener('input',renderPicker);$('saveContestBtn').addEventListener('click',saveEditor);$('cancelEditBtn').addEventListener('click',()=>$('editContestPanel').hidden=true);
+ document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.tab-page').forEach(p=>p.hidden=p.id!=='page-'+b.dataset.tab);}));
+ function updateAdminVisibility(){const a=location.hash==='#admin';$('adminSection').hidden=!a;$('welcome').hidden=a;document.querySelector('.tabs').hidden=a;document.querySelectorAll('.tab-page').forEach(p=>p.hidden=a||p.id!=='page-voting');}window.addEventListener('hashchange',updateAdminVisibility);updateAdminVisibility();connect();
 })();
